@@ -23,49 +23,48 @@ Reserva = NamedTuple("Reserva", [
 #################################################################################################################################
 
 # EJERCICIO 2
+def parseaFecha(fecha: str) -> date:
+    fecha = datetime.strptime(fecha, "%d/%m/%Y").date()
+    return fecha
 
-def procesa_fecchas(fecha_entrada_txt: str, fecha_salida_txt: str) -> FechasEstancia:
-    fecha_entrada: date = datetime.strptime(fecha_entrada_txt, "%d/%m/%Y").date()
-    fecha_salida: date = datetime.strptime(fecha_salida_txt, "%d/%m/%Y").date()
+def parseaServicios(servicios_adicionales: str) -> list[str] | None:
+    if not servicios_adicionales:
+        return None
+    else:
+        listaServicios=servicios_adicionales.split(",")
+    return listaServicios
+    
 
-    return FechasEstancia(fecha_entrada, fecha_salida)
-
-def lee_reservas(ruta: str) -> List[Reserva]:
+def lee_reservas(fichero: str) -> List[Reserva]:
     res: List[Reserva] = []
+    with open(fichero, "r", encoding="utf-8") as f:
+        lector = csv.reader(f)
+        next(lector)
 
-    with open(ruta, encoding="utf-8") as f:
-        lector = csv.reader(f, delimiter=";")
-        next(lector)  # saltar cabecera
-        for nombre, dni, fecha_entrada_txt, fecha_salida_txt, tipo_habitacion_txt, num_personas_txt, precio_txt, servicios_txt in lector:
-            fechas: FechasEstancia = procesa_fecchas(fecha_entrada_txt,fecha_salida_txt)
-            tipo_habitacion: str = str(tipo_habitacion_txt)
-            num_personas: int = int(num_personas_txt)
-            precio_noche: float = float(precio_txt.replace(",", "."))
-            # Procesa servicios_adicionales:
-            # - vacío o "None" -> lista vacía
-            # - si hay texto -> lista de servicios separados por coma
-            if servicios_txt.strip() == "" or servicios_txt.strip().lower() == "none":
-                servicios_adicionales: list[str] = []
-            else:
-                servicios_adicionales = servicios_txt.split(",")
+        for nombre, dni, fecha_entrada, fecha_salida, tipo_habitacion, num_personas, precio_noche, servicios_adicionales in lector:
+            # nombre, dni y tipo_habitacion no se parsean ya que son str
+            fecha_entradap = parseaFecha(fecha_entrada)
+            fecha_salidap = parseaFecha(fecha_salida)
+            num_personasp = int(num_personas)
+            precio_nochep = float(precio_noche)
+            servicios_adicionalesp = parseaServicios(servicios_adicionales)
+            
+            fechasp = FechasEstancia(fecha_entradap, fecha_salidap)
+            
+            # Usamos la variable 'fechas' en el constructor de Reserva
+            res.append(Reserva(nombre, dni, fechasp, tipo_habitacion, 
+                               num_personasp, precio_nochep, servicios_adicionalesp))
+        
+        return res
 
-
-            reserva: Reserva = Reserva(
-                nombre,
-                dni,
-                fechas,
-                tipo_habitacion,
-                num_personas,
-                precio_noche,
-                servicios_adicionales
-            )
-            res.append(reserva)
-    return res
 #################################################################################################################################
 
 # EJERCICIO 3
 
 def total_facturado(lista: List[Reserva],fecha_inicial: date | None,fecha_final: date | None) -> float:
      res=0
-     for i in lista:    
-         
+     for i in lista:
+         if (fecha_inicial == None or i.fechas.fecha_entrada >= fecha_inicial) and (fecha_final == None or i.fechas.fecha_entrada <= fecha_final):
+             dias = (i.fechas.fecha_salida - i.fechas.fecha_entrada).days
+             res += dias * i.precio_noche
+     return res

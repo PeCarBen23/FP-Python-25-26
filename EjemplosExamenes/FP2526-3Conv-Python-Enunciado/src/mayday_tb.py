@@ -17,4 +17,5 @@ from mayday import *
 #     print(f"  Ruta:     {vuelo.rutas}")
 #     print(f"  Modelo:   {vuelo.modelos}")
 
-
+listadesastres=lee_csv("datos.csv")
+decada_mas_colisiones(listadesastres)

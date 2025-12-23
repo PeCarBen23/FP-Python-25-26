@@ -7,6 +7,7 @@ def funcion(ruta: str) -> Salida:
 
     # Abrir el fichero CSV
     with open(ruta, encoding="utf-8") as f:
+        res=[]
         lector = csv.reader(f, delimiter=";")
         next(lector)  # Saltar cabecera
 
